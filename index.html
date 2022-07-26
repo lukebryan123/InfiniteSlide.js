@@ -1,0 +1,322 @@
+<head>
+	<meta charset="UTF-8" />
+	<title>infinite slide v2 | CSS3 Animation</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<meta name="Description"
+		content="「infinite slide v2」CSS3 Animation">
+
+	<!-- <link rel="stylesheet" href="mystyle2.css" /> -->
+
+</head>
+<body>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- <script src="infiniteslidev2.js"></script> -->
+
+	<script>
+        (function($){
+      $(window).on('load', function() {
+          window.loaded = true;
+      });
+      $(function(){
+        $.fn.infiniteslide = function(options){
+          //option
+          var settings = $.extend({
+            'speed': 100, 
+            'direction': 'left', 
+            'pauseonhover': true, 
+            'responsive': false, 
+            'clone': 1
+          },options);
+          
+          var setCss = function(obj,direction){
+            $(obj).wrap('<div class="infiniteslide_wrap"></div>').parent().css({
+              overflow: 'hidden'
+            });
+
+            if(direction == 'up' || direction == 'down'){
+              var d = 'column';
+            } else {
+              var d = 'row';
+            }
+                    
+            $(obj).css({
+              display: 'flex',
+              flexWrap: 'nowrap',
+              alignItems: 'center',
+              '-ms-flex-align': 'center',
+              flexDirection: d
+            }).children().css({
+                flex: 'none',
+                display: 'block'
+              });
+          }
+          
+          var setClone = function(obj,clone){
+            var $clone = $(obj).children().clone(true).addClass('infiniteslide_clone');
+            var i = 1;
+            while(i <= clone){
+              $clone.clone(true).appendTo($(obj));
+              i++;
+            }
+          }
+          
+          var getWidth = function(obj){
+            var w = 0;
+            $(obj).children(':not(.infiniteslide_clone)').each(function(key,value){
+              w = w + $(this).outerWidth(true);
+            });
+            return w;
+          }
+          var getHeight = function(obj){
+            var h = 0;
+            $(obj).children(':not(.infiniteslide_clone)').each(function(key,value){
+              h = h + $(this).outerHeight(true);
+            });
+            return h;
+          }
+
+          
+          var getSpeed = function(l,s){
+            return l / s;
+          }
+          var getNum = function(obj,direction){
+            var num = 0;
+            if(direction == 'up' || direction == 'down'){
+              num = getHeight(obj);
+            } else {
+              num = getWidth(obj);
+            }
+            return num;
+          }
+          
+          var getTranslate = function(num,direction){
+            if(direction == 'up' || direction == 'down'){
+              var i = '0,-' + num + 'px,0';
+            } else {
+              var i = '-' + num + 'px,0,0';
+            }
+            return i;
+          }
+          
+          var setAnim = function(obj,id,direction,speed){
+            var num = getNum(obj,direction);
+            if(direction == 'up' || direction == 'down'){
+              $(obj).parent('.infiniteslide_wrap').css({
+                height: num + 'px'
+              });
+            }
+            var i = getTranslate(num,direction);
+            
+            $(obj).attr('data-style','infiniteslide' + id);
+
+            var css = '@keyframes infiniteslide' + id + '{' + 
+                    'from {transform:translate3d(0,0,0);}' + 
+                    'to {transform:translate3d(' + i + ');}' + 
+                  '}';
+            $('<style />').attr('id','infiniteslide' + id + '_style')
+            .html(css)
+            .appendTo('head');
+            
+            if(direction == 'right' || direction == 'down'){
+              var reverse = ' reverse';
+            } else {
+              var reverse = '';
+            }
+            
+            $(obj).css({
+              animation: 'infiniteslide' + id + ' ' + getSpeed(num,speed) + 's linear 0s infinite' + reverse
+            });
+          }
+          var setStop = function(obj){
+            $(obj).on('mouseenter',function(){
+              $(this).css({
+                animationPlayState: 'paused'
+              });
+            }).on('mouseleave',function(){
+              $(this).css({
+                animationPlayState: 'running'
+              });
+            });
+          }
+          
+          var setResponsive = function(obj,direction){
+          	var num = getNum(obj,direction);
+          	var i = getTranslate(num,direction);
+          	return i;
+          };
+          
+          
+        
+          return this.each(function(key,value){
+            var $this = $(this);
+            var num = Date.now() + Math.floor(10000*Math.random()).toString(16);
+            if(settings.pauseonhover == true){
+              setStop($this);
+            }
+            var _onload = function(){
+              setCss($this,settings.direction);
+              setClone($this,settings.clone);
+              setAnim($this,num,settings.direction,settings.speed);
+              
+              if(settings.responsive){
+              	$(window).on('resize',function(){
+              		var i = setResponsive($this,settings.direction);
+              		var styleid = $this.attr('data-style');
+              		var stylehtml = $('#' + styleid + '_style').html();
+                  
+              		var stylehtml_new = stylehtml.replace(/to {transform:translate3d\((.*?)\)/,'to {transform:translate3d(' + i + ')');
+              		$('#' + styleid + '_style').html(stylehtml_new);
+
+              	});
+              }
+            };
+
+            if (window.loaded) {
+              _onload();
+            } else {
+              $(window).on('load', _onload);
+            }
+          });
+          
+        }
+      });
+    })(jQuery);
+  </script>
+
+
+	<style type="text/css">
+    body,video{
+        margin:0;
+        padding:0;
+        border:0;
+        font-size:100%;
+        font:inherit;
+        vertical-align:baseline
+    }
+
+
+
+		.scroll1{
+			display: none;
+
+		}
+
+		.scroll1 img{
+			vertical-align: bottom;
+		}
+	</style>
+
+	<script type="text/javascript">
+		$(function () {
+			$('.scroll1').infiniteslide({
+				speed: 10,
+				direction: 'left',
+				pauseonhover: false,
+			});
+			
+		});
+	</script>
+
+
+	<!-- <div class="module">
+		<ul class="scroll1">
+			<li><img src="pexels-pixabay-86695-0322edit3.png" width=1831px alt="" /></li>
+		</ul>
+	</div> -->
+
+	<div></div>
+	<div id="header"></div>
+  <div class="hero-space"></div>
+	<div class="module">
+		<div class="scroll1">
+				<img 
+					src="pexels-pixabay-86695-0322edit3-thin.png" 
+					width=1831px 
+					alt=""
+				/>
+		</div>
+    <div class="hero-text">
+      <h1>Title H1 text</h1>
+      <h4>Now a subtitle that's just a little longer</h4>  
+    </div>
+    <button id="test-button">View the Map</button>
+	</div>
+  <div class="content-below">
+    <div class="wide-1000"></div>
+  </div>
+
+  <style>
+    #header{
+      width:100%;
+      height:75px;
+      background:maroon;
+    }
+
+    .hero-space{
+      width:100%;
+      height:292px;
+      background:#f0f0f0;
+    }
+
+    .module{
+      position:relative;
+      margin-top:-292px;
+    }
+
+    .hero-text{
+      background-color: rgba(0,0,0,0.6);
+      width:300px;
+      height:120px;
+      color:white;
+      position:absolute;
+      bottom:30px;
+      left: max(25px, (100vw - 900px)/2);
+    }
+    
+    h1, h4{
+      padding:5px 15px;
+    }
+
+    h1{
+      top:60px;
+      left:100px;
+    }
+
+    h4{
+      top:150px;
+      left:70px;
+    }
+
+    #test-button{
+      position:absolute;
+      background-color: maroon;
+      color:white;
+      border:none;
+      right: 15%;
+      top:50%;
+      border-radius:8px;
+      padding:5px 15px;
+    }
+
+    .content-below{
+      width:100%;
+      height:150px;
+      background:gold;
+      padding:10px;
+      box-sizing:border-box;
+    }
+
+    .wide-1000{
+      width:100%;
+      height:100%;
+      max-width:1000px;
+      background-color: darkgoldenrod;
+      z-index: 5;
+      margin: auto;
+    }
+
+    </style>
+</body>
+
+</html>
